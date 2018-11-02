@@ -11,6 +11,7 @@ exports.githubWebhookHandler = async event => {
   let errMsg;
   // get the remaining variables from the GitHub event
   const headers = event.headers;
+  const sig = headers['X-Hub-Signature'];
   const githubEvent = headers['X-GitHub-Event'];
   const body = JSON.parse(event.body);
   // this determines username for a push event, but lists the repo owner for other events
