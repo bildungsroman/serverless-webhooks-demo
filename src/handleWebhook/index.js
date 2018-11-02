@@ -1,5 +1,6 @@
 const crypto = require('crypto');
-
+// This function will validate your payload from GitHub
+// See docs at https://developer.github.com/webhooks/securing/#validating-payloads-from-github
 function signRequestBody(key, body) {
   return `sha1=${crypto.createHmac('sha1', key).update(body, 'utf-8').digest('hex')}`;
 }
@@ -25,20 +26,20 @@ exports.githubWebhookHandler = async event => {
   // check that a GitHub webhook secret variable exists, if not, return an error
   if (typeof token !== 'string') {
     errMsg = 'Must provide a \'GITHUB_WEBHOOK_SECRET\' env variable';
-    return callback(null, {
+    return {
       statusCode: 401,
       headers: { 'Content-Type': 'text/plain' },
       body: errMsg,
-    });
+    };
   }
   // check validity of GitHub token
   if (sig !== calculatedSig) {
     errMsg = 'X-Hub-Signature incorrect. Github webhook token doesn\'t match';
-    return callback(null, {
+    return {
       statusCode: 401,
       headers: { 'Content-Type': 'text/plain' },
       body: errMsg,
-    });
+    };
   }
 
   // print some messages to the CloudWatch console
