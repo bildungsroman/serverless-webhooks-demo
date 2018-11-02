@@ -1,6 +1,14 @@
-module.exports.githubWebhookHandler = (event, context, callback) => {
+const crypto = require('crypto');
+
+function signRequestBody(key, body) {
+  return `sha1=${crypto.createHmac('sha1', key).update(body, 'utf-8').digest('hex')}`;
+}
+
+exports.githubWebhookHandler = async event => {
   // get the GitHub secret from the environment variables
   const token = process.env.GITHUB_WEBHOOK_SECRET;
+  const calculatedSig = signRequestBody(token, event.body);
+  let errMsg;
   // get the remaining variables from the GitHub event
   const headers = event.headers;
   const githubEvent = headers['X-GitHub-Event'];
@@ -15,7 +23,16 @@ module.exports.githubWebhookHandler = (event, context, callback) => {
   
   // check that a GitHub webhook secret variable exists, if not, return an error
   if (typeof token !== 'string') {
-    let errMsg = 'Must provide a \'GITHUB_WEBHOOK_SECRET\' env variable';
+    errMsg = 'Must provide a \'GITHUB_WEBHOOK_SECRET\' env variable';
+    return callback(null, {
+      statusCode: 401,
+      headers: { 'Content-Type': 'text/plain' },
+      body: errMsg,
+    });
+  }
+  // check validity of GitHub token
+  if (sig !== calculatedSig) {
+    errMsg = 'X-Hub-Signature incorrect. Github webhook token doesn\'t match';
     return callback(null, {
       statusCode: 401,
       headers: { 'Content-Type': 'text/plain' },
@@ -40,5 +57,5 @@ module.exports.githubWebhookHandler = (event, context, callback) => {
     }),
   };
 
-  return callback(null, response);
+  return response;
 };
