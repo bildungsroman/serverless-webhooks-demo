@@ -2,5 +2,8 @@
   "private": true,
   "devDependencies": {
     "aws-sdk": "~2"
+  },
+  "dependencies": {
+    "crypto": "~1.0.1"
   }
 }
